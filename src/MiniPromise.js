@@ -162,15 +162,26 @@ export default class MiniPromise {
       }
     });
   };
+
+  static allSettled = (promises) => {
+    const result = [];
+    for (const p of promises) {
+      result.push(
+        MiniPromise.resolve(p).then(
+          (data) => ({ status: FULFILLED, value: data }),
+          (error) => ({ status: REJECTED, reason: error })
+        )
+      );
+    }
+
+    return MiniPromise.all(result);
+  };
+
+  static race = (promises) => {
+    return new MiniPromise((resolve, reject) => {
+      for (const p of promises) {
+        MiniPromise.resolve(p).then(resolve, reject);
+      }
+    });
+  };
 }
-
-// MiniPromise.all(null)
-//   .then((data) => {
-//     console.log(data);
-//   })
-//   .catch((error) => {
-//     console.log(error);
-//   });
-
-Promise.reject(1);
-console.log(2);
