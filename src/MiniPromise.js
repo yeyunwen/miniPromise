@@ -122,4 +122,23 @@ export default class MiniPromise {
       }
     );
   };
+
+  static resolve = (value) => {
+    if (value instanceof MyPromise) {
+      return value;
+    }
+    return new MyPromise((resolve) => {
+      if (isPromise(value)) {
+        value.then(resolve);
+        return;
+      }
+      resolve(value);
+    });
+  };
+
+  static reject = (reason) => {
+    return new MyPromise((resolve, reject) => {
+      reject(reason);
+    });
+  };
 }
