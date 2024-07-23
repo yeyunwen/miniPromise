@@ -1,4 +1,4 @@
-import { getMicroTask, isPromise } from "./utils/index.js";
+import { getMicroTask, isPromise, RejectError } from "../utils/index.js";
 
 const PENDING = "pending";
 const FULFILLED = "fulfilled";
@@ -6,7 +6,7 @@ const REJECTED = "rejected";
 
 const runMicroTask = getMicroTask();
 
-export default class MyPromise {
+export default class MiniPromise {
   #state = PENDING;
   #result = undefined;
   #handlers = [];
@@ -14,6 +14,9 @@ export default class MyPromise {
     try {
       executor(this.#_resolve, this.#_reject);
     } catch (error) {
+      if (error instanceof RejectError) {
+        throw Error(error);
+      }
       this.#_reject(error);
     }
   }
