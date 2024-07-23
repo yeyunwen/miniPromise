@@ -1,4 +1,4 @@
-import { getMicroTask, isPromise, RejectError } from "../utils/index.js";
+import { getMicroTask, isPromise } from "../utils/index.js";
 
 const PENDING = "pending";
 const FULFILLED = "fulfilled";
@@ -14,9 +14,6 @@ export default class MiniPromise {
     try {
       executor(this.#resolve, this.#reject);
     } catch (error) {
-      if (error instanceof RejectError) {
-        throw Error(error);
-      }
       this.#reject(error);
     }
   }
@@ -95,10 +92,10 @@ export default class MiniPromise {
    * 符合PromiseA+规范的then方法
    * @param {Function} onFulfilled 成功回调
    * @param {Function} onRejected 失败回调
-   * @returns {MyPromise}
+   * @returns {MiniPromise}
    */
   then = (onFulfilled, onRejected) => {
-    return new MyPromise((resolve, reject) => {
+    return new MiniPromise((resolve, reject) => {
       this.#pushHandlers(onFulfilled, FULFILLED, resolve, reject);
       this.#pushHandlers(onRejected, REJECTED, resolve, reject);
       if (this.#state === PENDING) return;
@@ -124,10 +121,10 @@ export default class MiniPromise {
   };
 
   static resolve = (value) => {
-    if (value instanceof MyPromise) {
+    if (value instanceof MiniPromise) {
       return value;
     }
-    return new MyPromise((resolve) => {
+    return new MiniPromise((resolve) => {
       if (isPromise(value)) {
         value.then(resolve);
         return;
@@ -137,8 +134,43 @@ export default class MiniPromise {
   };
 
   static reject = (reason) => {
-    return new MyPromise((resolve, reject) => {
+    return new MiniPromise((resolve, reject) => {
       reject(reason);
     });
   };
+  static all = (promises) => {
+    return new MiniPromise((resolve, reject) => {
+      try {
+        const result = [];
+        let count = 0;
+        let fulfilledCount = 0;
+        for (const p of promises) {
+          MiniPromise.resolve(p).then((data) => {
+            fulfilledCount++;
+            result[count++] = data;
+            if (fulfilledCount === count) {
+              resolve(result);
+            }
+          }, reject);
+        }
+
+        if (count === 0) {
+          resolve(result);
+        }
+      } catch (error) {
+        reject(error);
+      }
+    });
+  };
 }
+
+// MiniPromise.all(null)
+//   .then((data) => {
+//     console.log(data);
+//   })
+//   .catch((error) => {
+//     console.log(error);
+//   });
+
+Promise.reject(1);
+console.log(2);
