@@ -12,20 +12,20 @@ export default class MiniPromise {
   #handlers = [];
   constructor(executor) {
     try {
-      executor(this.#_resolve, this.#_reject);
+      executor(this.#resolve, this.#reject);
     } catch (error) {
       if (error instanceof RejectError) {
         throw Error(error);
       }
-      this.#_reject(error);
+      this.#reject(error);
     }
   }
 
-  #_resolve = (data) => {
+  #resolve = (data) => {
     this.#changeState(FULFILLED, data);
   };
 
-  #_reject = (reason) => {
+  #reject = (reason) => {
     this.#changeState(REJECTED, reason);
   };
 
@@ -43,7 +43,6 @@ export default class MiniPromise {
   };
 
   #runHandlers = () => {
-    console.log(`运行${this.#handlers.length}个回调`);
     for (const handler of this.#handlers) {
       this.#runOneHandler(handler);
     }
@@ -105,5 +104,22 @@ export default class MiniPromise {
       if (this.#state === PENDING) return;
       this.#runHandlers();
     });
+  };
+
+  catch = (onRejected) => {
+    return this.then(null, onRejected);
+  };
+
+  finally = (onFinally) => {
+    return this.then(
+      (data) => {
+        onFinally();
+        return data;
+      },
+      (reason) => {
+        onFinally();
+        throw reason;
+      }
+    );
   };
 }
