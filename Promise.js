@@ -1,6 +1,10 @@
+import getMicroTask from "./getMicroTask.js";
+
 const PENDING = "pending";
 const FULFILLED = "fulfilled";
 const REJECTED = "rejected";
+
+const runMicroTask = getMicroTask();
 
 class MyPromise {
   #state = PENDING;
